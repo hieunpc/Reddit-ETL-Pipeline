@@ -111,6 +111,8 @@ HTML_TEMPLATE = """
       padding: 16px;
     }
     .panel h3 { margin: 0 0 12px; font-size: 17px; }
+    .chart-lg { height: 320px; }
+    .chart-sm { height: 320px; }
     .table-box { overflow-x:auto; }
     table { border-collapse: collapse; width: 100%; font-size: 14px; }
     th, td { border-bottom: 1px solid #edf0f2; padding: 10px; text-align: left; vertical-align: top; }
@@ -126,6 +128,7 @@ HTML_TEMPLATE = """
     @media (max-width: 1060px) {
       .cards { grid-template-columns: repeat(3, minmax(120px, 1fr)); }
       .grid-2 { grid-template-columns: 1fr; }
+      .chart-lg, .chart-sm { height: 280px; }
     }
     @media (max-width: 640px) {
       .cards { grid-template-columns: repeat(2, minmax(110px, 1fr)); }
@@ -165,11 +168,11 @@ HTML_TEMPLATE = """
       <div class="panel">
         <h3>Daily Activity Trend</h3>
         <div class="hint">Posts and comments over time for selected subreddits.</div>
-        <canvas id="trendChart"></canvas>
+        <div class="chart-lg"><canvas id="trendChart"></canvas></div>
       </div>
       <div class="panel">
         <h3>Top Subreddits by Posts</h3>
-        <canvas id="subredditChart"></canvas>
+        <div class="chart-sm"><canvas id="subredditChart"></canvas></div>
       </div>
     </section>
 
@@ -232,6 +235,12 @@ def _safe_series(df: pd.DataFrame, column: str, df_name: str, default=0) -> pd.S
     return df[column]
 
 
+def _normalized_subreddits(posts_df: pd.DataFrame) -> list[str]:
+    subreddit_clean = posts_df["subreddit"].dropna().astype(str).str.strip()
+    subreddit_clean = subreddit_clean.replace("", pd.NA).dropna()
+    return sorted(subreddit_clean.unique().tolist())
+
+
 def _filter_by_subreddits(df: pd.DataFrame, selected_subreddits: list[str], df_name: str) -> pd.DataFrame:
     if "subreddit" not in df.columns:
         logger.warning(
@@ -274,9 +283,7 @@ def _load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
 def dashboard():
     posts, comments = _load_data()
 
-    subreddit_clean = posts["subreddit"].dropna().astype(str).str.strip()
-    subreddit_clean = subreddit_clean.replace("", pd.NA).dropna()
-    all_subreddits = sorted(subreddit_clean.unique().tolist())
+    all_subreddits = _normalized_subreddits(posts)
     selected_subreddits = request.args.getlist("subreddit") or all_subreddits
 
     posts_view = _filter_by_subreddits(posts, selected_subreddits, "posts")
