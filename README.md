@@ -30,18 +30,23 @@ Main metrics:
 - Total posts/comments
 - Average post score
 - Comment per post ratio
+- Active subreddits and top subreddit
 - Daily trend of posts and comments
+- Top subreddits by post volume
 - Top posts by score
 
 Run dashboard locally:
 
 ```bash
+cd /home/runner/work/Reddit-ETL-Pipeline/Reddit-ETL-Pipeline
+pip install -r requirements.txt
+python src/main.py
 python src/dashboard/app.py
 ```
 
 Then open: `http://localhost:8501`
 
-> Note: run ETL first to generate `data/processed/posts.csv` and `data/processed/comments.csv`.
+> Note: ETL (`python src/main.py`) generates `data/processed/posts.csv` and `data/processed/comments.csv`, which the dashboard reads.
 
 ## 🚀 Upgrade Plan (Data Engineer Portfolio + Dashboard)
 
