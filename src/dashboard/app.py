@@ -66,7 +66,7 @@ HTML_TEMPLATE = """
     label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
     select {
       min-width: 280px;
-      height: clamp(96px, 18vh, 160px);
+      min-height: 120px;
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 8px;
@@ -221,16 +221,23 @@ HTML_TEMPLATE = """
 """
 
 
-def _safe_series(df: pd.DataFrame, column: str, default=0) -> pd.Series:
+def _safe_series(df: pd.DataFrame, column: str, df_name: str, default=0) -> pd.Series:
     if column not in df.columns:
-        logger.warning("Column '%s' missing in dashboard input; using default values.", column)
+        logger.warning(
+            "Column '%s' missing in %s DataFrame; using default values.",
+            column,
+            df_name,
+        )
         return pd.Series([default] * len(df), index=df.index)
     return df[column]
 
 
-def _filter_by_subreddits(df: pd.DataFrame, selected_subreddits: list[str]) -> pd.DataFrame:
+def _filter_by_subreddits(df: pd.DataFrame, selected_subreddits: list[str], df_name: str) -> pd.DataFrame:
     if "subreddit" not in df.columns:
-        logger.warning("Column 'subreddit' missing in dashboard input; returning empty view.")
+        logger.warning(
+            "Column 'subreddit' missing in %s DataFrame; returning empty view.",
+            df_name,
+        )
         return df.head(0)
     if not selected_subreddits:
         return df.head(0)
@@ -272,10 +279,10 @@ def dashboard():
     all_subreddits = sorted(subreddit_clean.unique().tolist())
     selected_subreddits = request.args.getlist("subreddit") or all_subreddits
 
-    posts_view = _filter_by_subreddits(posts, selected_subreddits)
-    comments_view = _filter_by_subreddits(comments, selected_subreddits)
+    posts_view = _filter_by_subreddits(posts, selected_subreddits, "posts")
+    comments_view = _filter_by_subreddits(comments, selected_subreddits, "comments")
 
-    score_series = pd.to_numeric(_safe_series(posts_view, "score"), errors="coerce")
+    score_series = pd.to_numeric(_safe_series(posts_view, "score", "posts"), errors="coerce")
     post_count = len(posts_view)
     comment_count = len(comments_view)
     avg_score = round(score_series.mean(), 2) if post_count else 0
