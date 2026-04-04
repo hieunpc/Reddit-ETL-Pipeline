@@ -56,5 +56,18 @@ Detailed roadmap: `docs/PROJECT_UPGRADE_PLAN.md`
 
 ```bash
 pip install -r requirements.txt
+cp .env.example .env
+# Edit .env and fill your real credentials
 python src/main.py
 ```
+
+### Environment variables
+
+Create `.env` from `.env.example` and set:
+
+- `CLIENT_ID`
+- `CLIENT_SECRET`
+- `KEY_ID`
+- `APPLICATION_KEY`
+- `BUCKET_NAME`
+- `REMOTE_PATH`
