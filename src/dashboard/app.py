@@ -236,6 +236,9 @@ def _safe_series(df: pd.DataFrame, column: str, df_name: str, default=0) -> pd.S
 
 
 def _normalized_subreddits(posts_df: pd.DataFrame) -> list[str]:
+    if "subreddit" not in posts_df.columns:
+        logger.warning("Column 'subreddit' missing in posts DataFrame; using empty subreddit list.")
+        return []
     subreddit_clean = posts_df["subreddit"].dropna().astype(str).str.strip()
     subreddit_clean = subreddit_clean.replace("", pd.NA).dropna()
     return sorted(subreddit_clean.unique().tolist())
@@ -294,11 +297,12 @@ def dashboard():
     comment_count = len(comments_view)
     avg_score = round(score_series.mean(), 2) if post_count else 0
     comment_per_post = round(comment_count / post_count, 2) if post_count else 0
-    active_subreddits = posts_view["subreddit"].nunique() if post_count else 0
+    subreddit_series = _safe_series(posts_view, "subreddit", "posts", default="unknown")
+    active_subreddits = subreddit_series.nunique() if post_count else 0
 
     top_subreddit = "-"
     if post_count:
-        top_subreddit_value = posts_view["subreddit"].value_counts().head(1)
+        top_subreddit_value = subreddit_series.value_counts().head(1)
         top_subreddit = top_subreddit_value.index[0] if not top_subreddit_value.empty else "-"
 
     posts_daily = posts_view.groupby("date", dropna=False).size().reset_index(name="posts")
