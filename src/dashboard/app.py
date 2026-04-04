@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -9,6 +10,7 @@ POSTS_PATH = DATA_DIR / "posts.csv"
 COMMENTS_PATH = DATA_DIR / "comments.csv"
 
 app = Flask(__name__)
+logger = logging.getLogger(__name__)
 
 HTML_TEMPLATE = """
 <!doctype html>
@@ -221,11 +223,15 @@ HTML_TEMPLATE = """
 
 def _safe_series(df: pd.DataFrame, column: str, default=0) -> pd.Series:
     if column not in df.columns:
+        logger.warning("Column '%s' missing in dashboard input; using default values.", column)
         return pd.Series([default] * len(df), index=df.index)
     return df[column]
 
 
 def _filter_by_subreddits(df: pd.DataFrame, selected_subreddits: list[str]) -> pd.DataFrame:
+    if "subreddit" not in df.columns:
+        logger.warning("Column 'subreddit' missing in dashboard input; returning empty view.")
+        return df.head(0)
     if not selected_subreddits:
         return df.head(0)
     return df[df["subreddit"].isin(selected_subreddits)]
@@ -261,9 +267,9 @@ def _load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
 def dashboard():
     posts, comments = _load_data()
 
-    all_subreddits = sorted(
-        posts["subreddit"].dropna().astype(str).str.strip().replace("", pd.NA).dropna().unique().tolist()
-    )
+    subreddit_clean = posts["subreddit"].dropna().astype(str).str.strip()
+    subreddit_clean = subreddit_clean.replace("", pd.NA).dropna()
+    all_subreddits = sorted(subreddit_clean.unique().tolist())
     selected_subreddits = request.args.getlist("subreddit") or all_subreddits
 
     posts_view = _filter_by_subreddits(posts, selected_subreddits)
