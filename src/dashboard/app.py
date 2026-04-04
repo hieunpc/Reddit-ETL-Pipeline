@@ -252,6 +252,10 @@ def _filter_by_subreddits(df: pd.DataFrame, selected_subreddits: list[str], df_n
         )
         return df.head(0)
     if not selected_subreddits:
+        logger.warning(
+            "No subreddit selected for %s DataFrame; returning empty view.",
+            df_name,
+        )
         return df.head(0)
     return df[df["subreddit"].isin(selected_subreddits)]
 
