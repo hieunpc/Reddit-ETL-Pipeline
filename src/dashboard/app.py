@@ -64,7 +64,7 @@ HTML_TEMPLATE = """
     label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
     select {
       min-width: 280px;
-      min-height: 112px;
+      height: clamp(96px, 18vh, 160px);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 8px;
@@ -225,6 +225,12 @@ def _safe_series(df: pd.DataFrame, column: str, default=0) -> pd.Series:
     return df[column]
 
 
+def _filter_by_subreddits(df: pd.DataFrame, selected_subreddits: list[str]) -> pd.DataFrame:
+    if not selected_subreddits:
+        return df.head(0)
+    return df[df["subreddit"].isin(selected_subreddits)]
+
+
 def _load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     if not POSTS_PATH.exists() or not COMMENTS_PATH.exists():
         raise FileNotFoundError(
@@ -260,8 +266,8 @@ def dashboard():
     )
     selected_subreddits = request.args.getlist("subreddit") or all_subreddits
 
-    posts_view = posts[posts["subreddit"].isin(selected_subreddits)] if selected_subreddits else posts.head(0)
-    comments_view = comments[comments["subreddit"].isin(selected_subreddits)] if selected_subreddits else comments.head(0)
+    posts_view = _filter_by_subreddits(posts, selected_subreddits)
+    comments_view = _filter_by_subreddits(comments, selected_subreddits)
 
     score_series = pd.to_numeric(_safe_series(posts_view, "score"), errors="coerce")
     post_count = len(posts_view)

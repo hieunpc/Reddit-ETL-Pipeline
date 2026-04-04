@@ -38,7 +38,7 @@ Main metrics:
 Run dashboard locally:
 
 ```bash
-cd /home/runner/work/Reddit-ETL-Pipeline/Reddit-ETL-Pipeline
+cd Reddit-ETL-Pipeline
 pip install -r requirements.txt
 python src/main.py
 python src/dashboard/app.py
